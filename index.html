@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#fffaf3">
+<title>Sale to Supper</title>
+<style>
+:root{--ink:#24302b;--muted:#68736d;--cream:#fffaf3;--card:#fff;--green:#315f4b;--green2:#dfece3;--gold:#e8b65a;--line:#e8e2d8;--shadow:0 10px 30px rgba(40,50,45,.08)}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#fffaf3,#f6f2e9);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{max-width:1050px;margin:auto;padding:22px 16px 50px}.hero{padding:20px 0 10px}.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--green);font-weight:800}.hero h1{font-family:Georgia,serif;font-size:clamp(40px,9vw,72px);line-height:.95;margin:8px 0 12px}.hero p{font-size:17px;line-height:1.5;max-width:650px;color:var(--muted)}
+.panel{background:rgba(255,255,255,.86);border:1px solid var(--line);border-radius:24px;padding:18px;box-shadow:var(--shadow);backdrop-filter:blur(8px)}
+.controls{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:12px}.field label{display:block;font-size:12px;font-weight:800;margin:0 0 7px;color:var(--muted)}select,input,button{font:inherit}select,input{width:100%;border:1px solid var(--line);background:white;border-radius:13px;padding:13px;color:var(--ink)}
+.locrow{display:flex;gap:10px;margin-top:12px}.locrow input{flex:1}.btn{border:0;border-radius:13px;padding:13px 16px;background:var(--green);color:white;font-weight:800;cursor:pointer}.btn.secondary{background:var(--green2);color:var(--green)}
+.status{margin-top:10px;font-size:13px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}.card{background:white;border:1px solid var(--line);border-radius:20px;padding:18px}.card h2{font-family:Georgia,serif;margin:0 0 10px;font-size:25px}.aditems{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.item{border:1px solid var(--line);border-radius:14px;padding:11px}.item b{display:block}.price{color:var(--green);font-weight:800;margin-top:4px}.recipe{padding:15px;border-radius:16px;background:#fbf7ef;margin-top:10px}.recipe h3{margin:0 0 6px}.recipe p{margin:5px 0;color:var(--muted);line-height:1.45}.tag{display:inline-block;background:var(--green2);color:var(--green);font-size:11px;font-weight:800;padding:5px 8px;border-radius:999px;margin:2px}.full{grid-column:1/-1}.footer{font-size:12px;color:var(--muted);text-align:center;margin-top:22px}
+@media(max-width:720px){.controls,.grid{grid-template-columns:1fr}.aditems{grid-template-columns:1fr 1fr}.full{grid-column:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <div class="eyebrow">Weekly deals → dinner</div>
+    <h1>Sale to Supper</h1>
+    <p>Tell us where you shop and what kind of meals you want. This clickable version turns weekly-sale items into simple meal ideas and a shopping list.</p>
+  </section>
+
+  <section class="panel">
+    <div class="controls">
+      <div class="field"><label>SUPERMARKET</label><select id="store"><option>Nearby supermarkets</option><option>Stater Bros. Markets</option><option>ALDI</option><option>Walmart</option></select></div>
+      <div class="field"><label>MEALS</label><select id="meals"><option>3 meals</option><option>5 meals</option><option>7 meals</option></select></div>
+      <div class="field"><label>STYLE</label><select id="style"><option>Any</option><option>High protein</option><option>Budget friendly</option><option>Vegetarian</option><option>Low carb</option></select></div>
+    </div>
+    <div class="locrow">
+      <input id="zip" inputmode="numeric" placeholder="Enter ZIP code (optional)">
+      <button class="btn" onclick="useLocation()">Use My Location</button>
+      <button class="btn secondary" onclick="buildMeals()">Create Meals</button>
+    </div>
+    <div id="status" class="status">Tip: location access is optional. You can use a ZIP code instead.</div>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Weekly sale basket</h2>
+      <div id="items" class="aditems"></div>
+    </section>
+    <section class="card">
+      <h2>Your meal plan</h2>
+      <div id="recipes"></div>
+    </section>
+    <section class="card full">
+      <h2>Shopping list</h2>
+      <div id="list"></div>
+    </section>
+  </div>
+  <div class="footer">Prototype uses illustrative sale data. A production version can connect this screen to an authorized weekly-ad/catalog provider.</div>
+</div>
+
+<script>
+const saleItems=[
+["Chicken breast","$2.99/lb"],["Ground beef","$3.99/lb"],["Salmon","$7.99/lb"],["Black beans","$0.89/can"],
+["Bell peppers","$1.49/3-pack"],["Broccoli","$1.29/lb"],["Avocados","$0.79 each"],["Roma tomatoes","$0.99/lb"],
+["Jasmine rice","$2.49/2-lb"],["Pasta","$1.25/box"],["Shredded cheese","$2.49/8 oz"],["Greek yogurt","$3.49/32 oz"]
+];
+const recipes=[
+["Sheet-Pan Chicken & Broccoli","Chicken breast • broccoli • rice","High protein"],
+["Beef & Pepper Rice Bowls","Ground beef • bell peppers • rice • avocado","Budget friendly"],
+["Creamy Tomato Pasta","Pasta • Roma tomatoes • shredded cheese","Vegetarian"],
+["Salmon Avocado Bowls","Salmon • avocado • broccoli • rice","High protein"],
+["Black Bean Fajita Bowls","Black beans • bell peppers • tomatoes • rice","Vegetarian"],
+["Cheesy Chicken Pasta Bake","Chicken • pasta • tomatoes • cheese","Family friendly"],
+["Greek Chicken Yogurt Bowls","Chicken • Greek yogurt • tomatoes • avocado","High protein"]
+];
+function renderItems(){document.getElementById("items").innerHTML=saleItems.map(x=>`<div class="item"><b>${x[0]}</b><span class="price">${x[1]}</span></div>`).join("")}
+function buildMeals(){
+ const style=document.getElementById("style").value, n=parseInt(document.getElementById("meals").value);
+ let r=recipes.filter(x=>style==="Any" || x[2]===style || (style==="Budget friendly"&&x[2]==="Family friendly"));
+ if(!r.length) r=recipes;
+ r=r.slice(0,n);
+ document.getElementById("recipes").innerHTML=r.map((x,i)=>`<div class="recipe"><span class="tag">Meal ${i+1}</span><h3>${x[0]}</h3><p>${x[1]}</p></div>`).join("");
+ document.getElementById("list").innerHTML=[...new Set(r.flatMap(x=>x[1].split(" • ")))].map(x=>`<span class="tag">${x}</span>`).join(" ");
+ document.getElementById("status").textContent="Meal plan created from the current prototype sale basket.";
+}
+function useLocation(){
+ if(!navigator.geolocation){document.getElementById("status").textContent="Location isn't available in this browser. Enter your ZIP code instead.";return}
+ document.getElementById("status").textContent="Requesting your location…";
+ navigator.geolocation.getCurrentPosition(
+  p=>document.getElementById("status").textContent=`Location found (${p.coords.latitude.toFixed(2)}, ${p.coords.longitude.toFixed(2)}). A live version can use these coordinates to find nearby stores and ads.`,
+  ()=>document.getElementById("status").textContent="Location permission wasn't granted. You can enter your ZIP code instead."
+ );
+}
+renderItems();buildMeals();
+</script>
+</body>
+</html>
