@@ -81,13 +81,82 @@ function buildMeals(){
  document.getElementById("list").innerHTML=[...new Set(r.flatMap(x=>x[1].split(" • ")))].map(x=>`<span class="tag">${x}</span>`).join(" ");
  document.getElementById("status").textContent="Meal plan created from the current prototype sale basket.";
 }
-function useLocation(){
- if(!navigator.geolocation){document.getElementById("status").textContent="Location isn't available in this browser. Enter your ZIP code instead.";return}
- document.getElementById("status").textContent="Requesting your location…";
- navigator.geolocation.getCurrentPosition(
-  p=>document.getElementById("status").textContent=`Location found (${p.coords.latitude.toFixed(2)}, ${p.coords.longitude.toFixed(2)}). A live version can use these coordinates to find nearby stores and ads.`,
-  ()=>document.getElementById("status").textContent="Location permission wasn't granted. You can enter your ZIP code instead."
- );
+async function useLocation() {
+  const status = document.getElementById("status");
+  const storeSelect = document.getElementById("store");
+
+  if (!navigator.geolocation) {
+    status.textContent = "Location isn't supported on this device.";
+    return;
+  }
+
+  status.textContent = "Finding your location...";
+
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      try {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+
+        status.textContent = "Finding supermarkets near you...";
+
+        const response = await fetch(
+          `/api/stores?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || "Store search failed.");
+        }
+
+        storeSelect.innerHTML = "";
+
+        if (!data.stores.length) {
+          storeSelect.innerHTML =
+            '<option value="">No nearby supermarkets found</option>';
+          status.textContent =
+            "We couldn't find supermarkets nearby. Try entering your ZIP code.";
+          return;
+        }
+
+        const firstOption = document.createElement("option");
+        firstOption.value = "";
+        firstOption.textContent = "Choose a supermarket";
+        storeSelect.appendChild(firstOption);
+
+        data.stores.forEach((store) => {
+          const option = document.createElement("option");
+
+          option.value = store.id;
+          option.textContent = store.address
+            ? `${store.name} — ${store.address}`
+            : store.name;
+
+          storeSelect.appendChild(option);
+        });
+
+        status.textContent =
+          `Found ${data.stores.length} nearby supermarkets. Choose one above.`;
+
+      } catch (error) {
+        console.error(error);
+        status.textContent =
+          "We couldn't load nearby supermarkets. Please try again.";
+      }
+    },
+
+    () => {
+      status.textContent =
+        "Location wasn't available. You can enter your ZIP code instead.";
+    },
+
+    {
+      enableHighAccuracy: false,
+      timeout: 10000,
+      maximumAge: 300000
+    }
+  );
 }
 renderItems();buildMeals();
 </script>
