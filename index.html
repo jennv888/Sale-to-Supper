@@ -72,14 +72,40 @@ const recipes=[
 ["Greek Chicken Yogurt Bowls","Chicken • Greek yogurt • tomatoes • avocado","High protein"]
 ];
 function renderItems(){document.getElementById("items").innerHTML=saleItems.map(x=>`<div class="item"><b>${x[0]}</b><span class="price">${x[1]}</span></div>`).join("")}
-function buildMeals(){
- const style=document.getElementById("style").value, n=parseInt(document.getElementById("meals").value);
- let r=recipes.filter(x=>style==="Any" || x[2]===style || (style==="Budget friendly"&&x[2]==="Family friendly"));
- if(!r.length) r=recipes;
- r=r.slice(0,n);
- document.getElementById("recipes").innerHTML=r.map((x,i)=>`<div class="recipe"><span class="tag">Meal ${i+1}</span><h3>${x[0]}</h3><p>${x[1]}</p></div>`).join("");
- document.getElementById("list").innerHTML=[...new Set(r.flatMap(x=>x[1].split(" • ")))].map(x=>`<span class="tag">${x}</span>`).join(" ");
- document.getElementById("status").textContent="Meal plan created from the current prototype sale basket.";
+async function buildMeals() {
+  const status = document.getElementById("status");
+  const storeSelect = document.getElementById("store");
+
+  if (!storeSelect.value) {
+    status.textContent = "Choose a supermarket first.";
+    return;
+  }
+
+  try {
+    const store = JSON.parse(storeSelect.value);
+
+    status.textContent = `Checking weekly deals at ${store.name}...`;
+
+    const params = new URLSearchParams({
+      store: store.name,
+      lat: store.lat,
+      lon: store.lon
+    });
+
+    const response = await fetch(`/api/deals?${params}`);
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.error || "Deals lookup failed.");
+    }
+
+    status.textContent = data.message;
+
+  } catch (error) {
+    console.error(error);
+    status.textContent =
+      "We couldn't load this supermarket's weekly deals yet.";
+  }
 }
 async function useLocation() {
   const status = document.getElementById("status");
