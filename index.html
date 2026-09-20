@@ -94,7 +94,7 @@ async function buildMeals() {
   const status = document.getElementById("status");
   const storeSelect = document.getElementById("store");
   const mealCount =
-  parseInt(document.getElementById("meals").value, 10) || 3;
+    parseInt(document.getElementById("meals").value, 10) || 3;
   const style = document.getElementById("style").value;
 
   if (!storeSelect.value) {
@@ -105,7 +105,8 @@ async function buildMeals() {
   try {
     const store = JSON.parse(storeSelect.value);
 
-    status.textContent = `Building ${mealCount} meals for ${store.name}...`;
+    status.textContent =
+      `Creating ${mealCount} meals for ${store.name}...`;
 
     const params = new URLSearchParams({
       store: store.name,
@@ -122,66 +123,129 @@ async function buildMeals() {
       throw new Error(data.error || "Deals lookup failed.");
     }
 
-    // Demo recipes while we wait for the live weekly-deals API.
     const recipePool = [
       {
         name: "Lemon Garlic Chicken & Broccoli",
         style: "Any",
         saleItem: "Chicken breast",
+        time: "30 min",
+        servings: 4,
         ingredients: [
-          "Chicken breast",
-          "Broccoli",
-          "Lemon",
-          "Garlic",
-          "Rice"
+          "1½ lb chicken breast",
+          "2 cups broccoli",
+          "1½ cups rice",
+          "1 lemon",
+          "3 cloves garlic",
+          "2 tbsp olive oil",
+          "Salt & pepper"
+        ],
+        steps: [
+          "Cook the rice according to package directions.",
+          "Cut the chicken into bite-size pieces and season with salt and pepper.",
+          "Heat olive oil in a large skillet and cook chicken until golden and cooked through.",
+          "Add broccoli and garlic and cook until the broccoli is tender-crisp.",
+          "Squeeze fresh lemon over the chicken and broccoli.",
+          "Serve over rice."
         ]
       },
+
       {
         name: "Beef Taco Bowls",
         style: "Mexican",
         saleItem: "Ground beef",
+        time: "25 min",
+        servings: 4,
         ingredients: [
-          "Ground beef",
-          "Black beans",
-          "Rice",
-          "Tomatoes",
-          "Avocado"
+          "1 lb ground beef",
+          "1 can black beans",
+          "1½ cups rice",
+          "2 Roma tomatoes",
+          "1 avocado",
+          "1 cup shredded cheese",
+          "1 packet taco seasoning"
+        ],
+        steps: [
+          "Cook the rice according to package directions.",
+          "Brown the ground beef in a skillet and drain excess fat.",
+          "Stir in taco seasoning and a splash of water.",
+          "Warm the black beans.",
+          "Divide rice between bowls.",
+          "Top with beef, beans, tomatoes, avocado and cheese."
         ]
       },
+
       {
         name: "Honey Garlic Salmon Bowls",
         style: "Asian",
         saleItem: "Salmon",
+        time: "30 min",
+        servings: 4,
         ingredients: [
-          "Salmon",
-          "Rice",
-          "Broccoli",
-          "Garlic",
-          "Soy sauce"
+          "1½ lb salmon",
+          "1½ cups rice",
+          "2 cups broccoli",
+          "3 cloves garlic",
+          "3 tbsp soy sauce",
+          "2 tbsp honey",
+          "1 tbsp olive oil"
+        ],
+        steps: [
+          "Cook the rice according to package directions.",
+          "Mix honey, soy sauce and minced garlic.",
+          "Cut salmon into portions.",
+          "Heat olive oil in a skillet and cook salmon until nearly done.",
+          "Pour in the honey garlic sauce and cook until glazed.",
+          "Steam or sauté the broccoli.",
+          "Serve salmon and broccoli over rice."
         ]
       },
+
       {
         name: "Chicken Fajita Bowls",
         style: "Mexican",
         saleItem: "Chicken breast",
+        time: "30 min",
+        servings: 4,
         ingredients: [
-          "Chicken breast",
-          "Bell peppers",
-          "Rice",
-          "Avocado",
-          "Lime"
+          "1½ lb chicken breast",
+          "3 bell peppers",
+          "1½ cups rice",
+          "1 avocado",
+          "1 lime",
+          "1 packet fajita seasoning"
+        ],
+        steps: [
+          "Cook the rice.",
+          "Slice chicken and bell peppers into strips.",
+          "Season the chicken with fajita seasoning.",
+          "Cook chicken in a hot skillet until browned.",
+          "Add peppers and cook until tender-crisp.",
+          "Serve over rice with avocado and fresh lime."
         ]
       },
+
       {
         name: "Mediterranean Chicken Bowls",
         style: "Mediterranean",
         saleItem: "Chicken breast",
+        time: "30 min",
+        servings: 4,
         ingredients: [
-          "Chicken breast",
-          "Tomatoes",
-          "Cucumber",
-          "Greek yogurt",
-          "Rice"
+          "1½ lb chicken breast",
+          "1½ cups rice",
+          "2 Roma tomatoes",
+          "1 cucumber",
+          "1 cup Greek yogurt",
+          "1 lemon",
+          "2 cloves garlic"
+        ],
+        steps: [
+          "Cook the rice.",
+          "Season and cook the chicken until golden and cooked through.",
+          "Dice the tomatoes and cucumber.",
+          "Mix Greek yogurt with lemon juice and minced garlic.",
+          "Divide rice between bowls.",
+          "Add chicken and vegetables and drizzle with yogurt sauce."
         ]
       }
     ];
@@ -192,7 +256,10 @@ async function buildMeals() {
         : recipePool.filter(recipe => recipe.style === style);
 
     if (recipes.length < mealCount) {
-      recipes = recipePool;
+      const extras = recipePool.filter(
+        recipe => !recipes.includes(recipe)
+      );
+      recipes = [...recipes, ...extras];
     }
 
     recipes = recipes.slice(0, mealCount);
@@ -203,24 +270,53 @@ async function buildMeals() {
     recipesBox.innerHTML = recipes
       .map(
         recipe => `
-          <div class="recipe">
-            <strong>${recipe.name}</strong><br>
-            <small>Uses ${recipe.saleItem}</small>
-          </div>
+          <details class="recipe">
+            <summary>
+              <strong>${recipe.name}</strong>
+              <span>${recipe.time} • ${recipe.servings} servings</span>
+            </summary>
+
+            <div class="recipe-details">
+              <p><strong>⭐ Featured deal:</strong> ${recipe.saleItem}</p>
+
+              <h4>Ingredients</h4>
+              <ul>
+                ${recipe.ingredients
+                  .map(item => `<li>${item}</li>`)
+                  .join("")}
+              </ul>
+
+              <h4>Directions</h4>
+              <ol>
+                ${recipe.steps
+                  .map(step => `<li>${step}</li>`)
+                  .join("")}
+              </ol>
+            </div>
+          </details>
         `
       )
       .join("");
 
     const shoppingItems = [
-      ...new Set(recipes.flatMap(recipe => recipe.ingredients))
+      ...new Set(
+        recipes.flatMap(recipe => recipe.ingredients)
+      )
     ];
 
     shoppingBox.innerHTML = shoppingItems
-      .map(item => `<div>✓ ${item}</div>`)
+      .map(
+        item => `
+          <label class="shopping-item">
+            <input type="checkbox">
+            <span>${item}</span>
+          </label>
+        `
+      )
       .join("");
 
     status.textContent =
-      `${mealCount} meal ideas created for ${store.name}. Demo deals are being used until live weekly-ad data is connected.`;
+      `${recipes.length} meal ideas created for ${store.name}. Demo deals are being used until live weekly-ad data is connected.`;
 
   } catch (error) {
     console.error(error);
