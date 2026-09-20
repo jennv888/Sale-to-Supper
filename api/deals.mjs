@@ -3,6 +3,8 @@ export async function GET(request) {
     const url = new URL(request.url);
 
     const storeName = url.searchParams.get("store");
+    const address = url.searchParams.get("address") || "";
+    const zip = url.searchParams.get("zip") || "";
     const lat = url.searchParams.get("lat");
     const lon = url.searchParams.get("lon");
 
@@ -16,25 +18,38 @@ export async function GET(request) {
       );
     }
 
-    /*
-      Sale to Supper deals service.
+    const store = {
+      name: storeName,
+      address,
+      zip,
+      lat: lat ? Number(lat) : null,
+      lon: lon ? Number(lon) : null
+    };
 
-      Next, this endpoint will connect each supermarket
-      to its live weekly-ad source.
+    // Safeway gets its own retailer connection.
+    // We are NOT labeling any prices as live until they
+    // have been retrieved from a verified current source.
+    if (storeName.toLowerCase().includes("safeway")) {
+      return Response.json({
+        success: true,
+        retailer: "safeway",
+        store,
+        deals: [],
+        liveDeals: false,
+        message: address
+          ? `Safeway selected: ${address}. Store identified and ready for weekly-ad connection.`
+          : `Safeway selected. Store identified and ready for weekly-ad connection.`
+      });
+    }
 
-      For now we're testing that the selected store can
-      travel successfully from the website to this API.
-    */
-
+    // Other supermarkets will get their own adapters later.
     return Response.json({
       success: true,
-      store: {
-        name: storeName,
-        lat: lat ? Number(lat) : null,
-        lon: lon ? Number(lon) : null
-      },
+      retailer: "other",
+      store,
       deals: [],
-      message: `Ready to find weekly deals for ${storeName}.`
+      liveDeals: false,
+      message: `${storeName} selected. Weekly-ad connection coming next.`
     });
 
   } catch (error) {
