@@ -14,7 +14,24 @@
 .locrow{display:flex;gap:10px;margin-top:12px}.locrow input{flex:1}.btn{border:0;border-radius:13px;padding:13px 16px;background:var(--green);color:white;font-weight:800;cursor:pointer}.btn.secondary{background:var(--green2);color:var(--green)}
 .status{margin-top:10px;font-size:13px;color:var(--muted)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}.card{background:white;border:1px solid var(--line);border-radius:20px;padding:18px}.card h2{font-family:Georgia,serif;margin:0 0 10px;font-size:25px}.aditems{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.item{border:1px solid var(--line);border-radius:14px;padding:11px}.item b{display:block}.price{color:var(--green);font-weight:800;margin-top:4px}.recipe{padding:15px;border-radius:16px;background:#fbf7ef;margin-top:10px}.recipe h3{margin:0 0 6px}.recipe p{margin:5px 0;color:var(--muted);line-height:1.45}.tag{display:inline-block;background:var(--green2);color:var(--green);font-size:11px;font-weight:800;padding:5px 8px;border-radius:999px;margin:2px}.full{grid-column:1/-1}.footer{font-size:12px;color:var(--muted);text-align:center;margin-top:22px}
-@media(max-width:720px){.controls,.grid{grid-template-columns:1fr}.aditems{grid-template-columns:1fr 1fr}.full{grid-column:auto}}
+@media(max-width:720px){.controls,.grid{grid-template-columns:1fr}.aditems{grid-template-columns:1fr 1fr}.full{grid-column:auto}} @media(max-width:720px){
+.locrow{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.locrow #zip{
+  grid-column:1 / -1;
+  width:100%;
+  min-width:0;
+}
+
+.locrow .btn{
+  width:100%;
+}
+
+}
 </style>
 </head>
 <body>
