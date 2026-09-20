@@ -218,7 +218,7 @@ async function loadStores(lat, lon, zip = "") {
     console.error(error);
 
     status.textContent =
-      "We couldn't load nearby supermarkets. Please try again.";
+  `Store error: ${error.message}`;
   }
 }
 
