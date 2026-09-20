@@ -93,7 +93,8 @@ function renderItems(){document.getElementById("items").innerHTML=saleItems.map(
 async function buildMeals() {
   const status = document.getElementById("status");
   const storeSelect = document.getElementById("store");
-  const mealCount = Number(document.getElementById("meals").value);
+  const mealCount =
+  parseInt(document.getElementById("meals").value, 10) || 3;
   const style = document.getElementById("style").value;
 
   if (!storeSelect.value) {
