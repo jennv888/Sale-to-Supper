@@ -128,7 +128,13 @@ async function useLocation() {
         data.stores.forEach((store) => {
           const option = document.createElement("option");
 
-          option.value = store.id;
+         option.value = JSON.stringify({
+  id: store.id,
+  name: store.name,
+  address: store.address,
+  lat: store.lat,
+  lon: store.lon
+});
           option.textContent = store.address
             ? `${store.name} — ${store.address}`
             : store.name;
