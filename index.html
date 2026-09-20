@@ -361,10 +361,14 @@ async function buildMeals() {
     parseInt(document.getElementById("meals").value, 10) || 3;
   const style = document.getElementById("style").value;
 
-  if (!storeSelect.value) {
-    status.textContent = "Choose a supermarket first.";
-    return;
-  }
+  if (
+  !storeSelect.value ||
+  storeSelect.value === "Nearby supermarkets"
+) {
+  status.textContent =
+    "Enter your ZIP code or use your location, then choose a supermarket.";
+  return;
+}
 
   try {
     const store = JSON.parse(storeSelect.value);
