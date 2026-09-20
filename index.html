@@ -32,7 +32,8 @@
       <div class="field"><label>STYLE</label><select id="style"><option>Any</option><option>High protein</option><option>Budget friendly</option><option>Vegetarian</option><option>Low carb</option></select></div>
     </div>
     <div class="locrow">
-      <input id="zip" inputmode="numeric" placeholder="Enter ZIP code (optional)">
+     <input id="zip" inputmode="numeric" maxlength="5" placeholder="Enter ZIP code">
+      <button class="btn" onclick="useZip()">Find Stores</button>
       <button class="btn" onclick="useLocation()">Use My Location</button>
       <button class="btn secondary" onclick="buildMeals()">Create Meals</button>
     </div>
@@ -106,13 +107,110 @@ async function buildMeals() {
     status.textContent =
       "We couldn't load this supermarket's weekly deals yet.";
   }
+  async function useZip() {
+  const zip = document.getElementById("zip").value.trim();
+  const status = document.getElementById("status");
+
+  if (!/^\d{5}$/.test(zip)) {
+    status.textContent = "Please enter a valid 5-digit ZIP code.";
+    return;
+  }
+
+  status.textContent = `Finding supermarkets near ${zip}...`;
+
+  try {
+    const response = await fetch(
+      `https://api.zippopotam.us/us/${encodeURIComponent(zip)}`
+    );
+
+    if (!response.ok) {
+      throw new Error("ZIP code not found.");
+    }
+
+    const data = await response.json();
+
+    const lat = Number(data.places[0].latitude);
+    const lon = Number(data.places[0].longitude);
+
+    await loadStores(lat, lon, zip);
+
+  } catch (error) {
+    console.error(error);
+    status.textContent =
+      "We couldn't find that ZIP code. Please try again.";
+  }
 }
-async function useLocation() {
+async function loadStores(lat, lon, zip = "") {
   const status = document.getElementById("status");
   const storeSelect = document.getElementById("store");
 
+  try {
+    status.textContent = "Finding supermarkets near you...";
+
+    const response = await fetch(
+      `/api/stores?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.error || "Store search failed.");
+    }
+
+    storeSelect.innerHTML = "";
+
+    if (!data.stores.length) {
+      storeSelect.innerHTML =
+        '<option value="">No nearby supermarkets found</option>';
+
+      status.textContent =
+        "We couldn't find supermarkets nearby. Try another ZIP code.";
+
+      return;
+    }
+
+    const firstOption = document.createElement("option");
+    firstOption.value = "";
+    firstOption.textContent = "Choose a supermarket";
+    storeSelect.appendChild(firstOption);
+
+    data.stores.forEach((store) => {
+      const option = document.createElement("option");
+
+      option.value = JSON.stringify({
+        id: store.id,
+        name: store.name,
+        address: store.address,
+        lat: store.lat,
+        lon: store.lon,
+        zip: zip
+      });
+
+      option.textContent = store.address
+        ? `${store.name} — ${store.address}`
+        : store.name;
+
+      storeSelect.appendChild(option);
+    });
+
+    status.textContent =
+      `Found ${data.stores.length} nearby supermarkets. Choose one above.`;
+
+  } catch (error) {
+    console.error(error);
+
+    status.textContent =
+      "We couldn't load nearby supermarkets. Please try again.";
+  }
+}
+
+
+async function useLocation() {
+  const status = document.getElementById("status");
+
   if (!navigator.geolocation) {
-    status.textContent = "Location isn't supported on this device.";
+    status.textContent =
+      "Location isn't supported on this device.";
     return;
   }
 
@@ -120,67 +218,15 @@ async function useLocation() {
 
   navigator.geolocation.getCurrentPosition(
     async (position) => {
-      try {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
 
-        status.textContent = "Finding supermarkets near you...";
-
-        const response = await fetch(
-          `/api/stores?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`
-        );
-
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-          throw new Error(data.error || "Store search failed.");
-        }
-
-        storeSelect.innerHTML = "";
-
-        if (!data.stores.length) {
-          storeSelect.innerHTML =
-            '<option value="">No nearby supermarkets found</option>';
-          status.textContent =
-            "We couldn't find supermarkets nearby. Try entering your ZIP code.";
-          return;
-        }
-
-        const firstOption = document.createElement("option");
-        firstOption.value = "";
-        firstOption.textContent = "Choose a supermarket";
-        storeSelect.appendChild(firstOption);
-
-        data.stores.forEach((store) => {
-          const option = document.createElement("option");
-
-         option.value = JSON.stringify({
-  id: store.id,
-  name: store.name,
-  address: store.address,
-  lat: store.lat,
-  lon: store.lon
-});
-          option.textContent = store.address
-            ? `${store.name} — ${store.address}`
-            : store.name;
-
-          storeSelect.appendChild(option);
-        });
-
-        status.textContent =
-          `Found ${data.stores.length} nearby supermarkets. Choose one above.`;
-
-      } catch (error) {
-        console.error(error);
-        status.textContent =
-          "We couldn't load nearby supermarkets. Please try again.";
-      }
+      await loadStores(lat, lon);
     },
 
     () => {
       status.textContent =
-        "Location wasn't available. You can enter your ZIP code instead.";
+        "Location wasn't available. Enter your ZIP code instead.";
     },
 
     {
