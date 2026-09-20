@@ -93,6 +93,8 @@ function renderItems(){document.getElementById("items").innerHTML=saleItems.map(
 async function buildMeals() {
   const status = document.getElementById("status");
   const storeSelect = document.getElementById("store");
+  const mealCount = Number(document.getElementById("meals").value);
+  const style = document.getElementById("style").value;
 
   if (!storeSelect.value) {
     status.textContent = "Choose a supermarket first.";
@@ -102,15 +104,15 @@ async function buildMeals() {
   try {
     const store = JSON.parse(storeSelect.value);
 
-    status.textContent = `Checking weekly deals at ${store.name}...`;
+    status.textContent = `Building ${mealCount} meals for ${store.name}...`;
 
     const params = new URLSearchParams({
-  store: store.name,
-  address: store.address || "",
-  zip: store.zip || "",
-  lat: store.lat,
-  lon: store.lon
-});
+      store: store.name,
+      address: store.address || "",
+      zip: store.zip || "",
+      lat: store.lat,
+      lon: store.lon
+    });
 
     const response = await fetch(`/api/deals?${params}`);
     const data = await response.json();
@@ -119,14 +121,113 @@ async function buildMeals() {
       throw new Error(data.error || "Deals lookup failed.");
     }
 
-    status.textContent = data.message;
+    // Demo recipes while we wait for the live weekly-deals API.
+    const recipePool = [
+      {
+        name: "Lemon Garlic Chicken & Broccoli",
+        style: "Any",
+        saleItem: "Chicken breast",
+        ingredients: [
+          "Chicken breast",
+          "Broccoli",
+          "Lemon",
+          "Garlic",
+          "Rice"
+        ]
+      },
+      {
+        name: "Beef Taco Bowls",
+        style: "Mexican",
+        saleItem: "Ground beef",
+        ingredients: [
+          "Ground beef",
+          "Black beans",
+          "Rice",
+          "Tomatoes",
+          "Avocado"
+        ]
+      },
+      {
+        name: "Honey Garlic Salmon Bowls",
+        style: "Asian",
+        saleItem: "Salmon",
+        ingredients: [
+          "Salmon",
+          "Rice",
+          "Broccoli",
+          "Garlic",
+          "Soy sauce"
+        ]
+      },
+      {
+        name: "Chicken Fajita Bowls",
+        style: "Mexican",
+        saleItem: "Chicken breast",
+        ingredients: [
+          "Chicken breast",
+          "Bell peppers",
+          "Rice",
+          "Avocado",
+          "Lime"
+        ]
+      },
+      {
+        name: "Mediterranean Chicken Bowls",
+        style: "Mediterranean",
+        saleItem: "Chicken breast",
+        ingredients: [
+          "Chicken breast",
+          "Tomatoes",
+          "Cucumber",
+          "Greek yogurt",
+          "Rice"
+        ]
+      }
+    ];
+
+    let recipes =
+      style === "Any"
+        ? recipePool
+        : recipePool.filter(recipe => recipe.style === style);
+
+    if (recipes.length < mealCount) {
+      recipes = recipePool;
+    }
+
+    recipes = recipes.slice(0, mealCount);
+
+    const recipesBox = document.getElementById("recipes");
+    const shoppingBox = document.getElementById("list");
+
+    recipesBox.innerHTML = recipes
+      .map(
+        recipe => `
+          <div class="recipe">
+            <strong>${recipe.name}</strong><br>
+            <small>Uses ${recipe.saleItem}</small>
+          </div>
+        `
+      )
+      .join("");
+
+    const shoppingItems = [
+      ...new Set(recipes.flatMap(recipe => recipe.ingredients))
+    ];
+
+    shoppingBox.innerHTML = shoppingItems
+      .map(item => `<div>✓ ${item}</div>`)
+      .join("");
+
+    status.textContent =
+      `${mealCount} meal ideas created for ${store.name}. Demo deals are being used until live weekly-ad data is connected.`;
 
   } catch (error) {
     console.error(error);
+
     status.textContent =
-      "We couldn't load this supermarket's weekly deals yet.";
+      `Meal builder error: ${error.message}`;
   }
-  }
+}
   async function useZip() {
   const zip = document.getElementById("zip").value.trim();
   const status = document.getElementById("status");
