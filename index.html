@@ -105,10 +105,12 @@ async function buildMeals() {
     status.textContent = `Checking weekly deals at ${store.name}...`;
 
     const params = new URLSearchParams({
-      store: store.name,
-      lat: store.lat,
-      lon: store.lon
-    });
+  store: store.name,
+  address: store.address || "",
+  zip: store.zip || "",
+  lat: store.lat,
+  lon: store.lon
+});
 
     const response = await fetch(`/api/deals?${params}`);
     const data = await response.json();
